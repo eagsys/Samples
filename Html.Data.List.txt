@@ -1,0 +1,259 @@
+$if(Model.IsNet)$
+  <script type="text/javascript" language="JavaScript">
+    var f_get = '$Model.Fget$';
+	
+    function DataNetRefresh() {
+      var xmlhttp = getXmlHttp();
+  	  var currentTime = new Date();
+	  var url = '$BaseUrl$?Cmd=DataNetGet&f_get=' + f_get + '&' + currentTime;
+      xmlhttp.open('GET', url, true);
+      xmlhttp.onreadystatechange = function () {
+        if (xmlhttp.readyState == 4) { if (xmlhttp.status == 200) { DataNetInsert(xmlhttp.responseText); } }
+      }; xmlhttp.send(null);
+    }
+	
+	function DataNetInsert(data)
+	{
+	  var arr1 = data.split('&');
+
+      for (var i = 0; i < arr1.length; i++) {
+        var arr2 = arr1[i].split('=');
+		
+		var e = document.getElementById(arr2[0]);
+		
+		if (e) { e.value = arr2[1]; }
+      }
+	  
+	  //setTimeout(DataNetRefresh, 250);
+	}
+	
+    setInterval(DataNetRefresh, 250);
+	//setTimeout(DataNetRefresh, 250);			
+  </script>
+$endif$
+
+<table border="0" width="100%">
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+
+<tr>
+<td class="BorderRight">
+<font class="FontPage">$Model.TypeName$</font>
+</td>
+
+<td width="190" align="center" class="BorderRight"><font class="FontData">$DataListAmount$&nbsp;$Model.Amount$</font></td>
+
+<form action="$BaseUrl$" method="Post" name="BackForm" id="BackForm">
+<input type="hidden" name="Cmd" value="DataList">
+<input type="hidden" name="IdType" value="$Model.IdType$">
+<input type="hidden" name="SortBy" value="$Model.SortBy$">
+<input type="hidden" name="SortType" value="$Model.SortType$">
+<input type="hidden" name="LimitFrom" value="$Model.LimitBack$">
+<input type="hidden" name="LimitAmount" value="$Model.LimitAmount$">
+  $if(Model.IsSearch)$
+    <input type="hidden" name="IsSearch" value="y">
+	$Model.Search:{search|<input type="hidden" name="f_$search.Id$" id="f_$search.Id$" value="$search.Text$">}$
+  $endif$
+</form>
+
+<form action="$BaseUrl$" method="Post" name="ForwardForm" id="ForwardForm">
+<input type="hidden" name="Cmd" value="DataList">
+<input type="hidden" name="IdType" value="$Model.IdType$">
+<input type="hidden" name="SortBy" value="$Model.SortBy$">
+<input type="hidden" name="SortType" value="$Model.SortType$">
+<input type="hidden" name="LimitFrom" value="$Model.LimitForward$">
+<input type="hidden" name="LimitAmount" value="$Model.LimitAmount$">
+  $if(Model.IsSearch)$
+    <input type="hidden" name="IsSearch" value="y">
+	$Model.Search:{search|<input type="hidden" name="f_$search.Id$" id="f_$search.Id$" value="$search.Text$">}$
+  $endif$
+</form>
+
+<td align="center" width="120" class="BorderRight">
+  <a href="#" onclick="javascript:document.getElementById('BackForm').submit();">
+  <img src="backblue.png" width="32" height="32" alt="$DataListBack$" title="$DataListBack$" border="0"></a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="#" onclick="javascript:document.getElementById('ForwardForm').submit();">
+  <img src="forwardblue.png" width="32" height="32" alt="$DataListForward$" title="$DataListForward$" border="0"></a>
+</td>
+
+<td align="center" width="40">
+<a href="javascript:window.open('$BaseUrl$?Cmd=DataAdd&IdType=$Model.IdType$','','scrollbars,resizable,width=780,height=580');void(0);">
+<img src="add.png" width="32" height="32" alt="$DataListAdd$" title="$DataListAdd$" border="0"></a>
+</td>
+
+</tr>
+
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+
+
+
+<TABLE BORDER="0" WIDTH="100%">
+  <TR>
+  		
+    <TD WIDTH="170" VALIGN="TOP">
+	
+	<table border="0" width="100%">
+	<tr>
+    <td style="BACKGROUND-COLOR: #E3E3E3; CURSOR: POINTER;" onclick="ShowHide('idSearch');">
+    <font class="FontForm">$DataListSearch$</font>
+	<img src="showarea.png" height="20" width="20" border="0" align="right">
+    </td>
+    </tr>
+	</table>
+	
+	$if(Model.IsSearch)$
+	  <div id="idSearch" style="display:block;">
+	$else$
+	  <div id="idSearch" style="display:none;">
+	$endif$
+	<table border="0" width="100%">
+	
+	<form action="$BaseUrl$" method="Post" name="SearchForm" id="SearchForm">
+    <input type="hidden" name="Cmd" value="DataList">
+    <input type="hidden" name="IdType" value="$Model.IdType$">	
+	<input type="hidden" name="IsSearch" value="y">		
+	
+	$Model.Search:{search|<tr>
+	<td>
+	<font class="FontData">$search.Name$</font><br />
+	$if(search.IsDate)$
+      <input type="text" name="f_$search.Id$" id="f_$search.Id$" class="TextBoxSearch" value="$search.Text$" placeholder="$DataListPeriod$">
+    $else$
+      <input type="text" name="f_$search.Id$" id="f_$search.Id$" class="TextBoxSearch" value="$search.Text$">	
+    $endif$
+	</td>
+	</tr>
+		
+	<tr><td></td></tr>
+	}$
+		
+	<tr>
+	<td align="center">
+      <a href="#" onclick="javascript:document.getElementById('SearchForm').submit();">
+      <img src="magnify.png" width="32" height="32" alt="$DataListSearch$" title="$DataListSearch$" border="0" valign="middle"></a> 
+	</td>
+	</tr>
+		
+	</form>
+	</table>
+	</div>
+	
+	
+	
+	$if(Model.IsNet)$
+	  <br>
+	
+      <table border="0" width="100%">
+		
+	  <tr>
+      <td class="ColorE3E3E3">
+        <font class="FontForm">$DataListNet$</font>
+      </td>
+      </tr>
+	  <tr><td></td></tr>
+	  
+	
+      $Model.Net:{net|<tr>
+	  <td>
+	  <font class="FontData">$net.Name$</font><br />
+      <input type="text" name="n_$net.Id$" id="n_$net.Id$" class="TextBoxSearch" value="$net.Value$">	
+	  </td>
+  	  </tr>
+		
+	  <tr><td></td></tr>
+	  }$
+	
+	  </table>
+	$endif$
+	
+	
+    </TD>
+	
+	
+		
+	
+	<TD VALIGN="TOP">
+		
+	<table width="100%" border="0">
+
+    <tr class="TableHeader"> 
+    <td width="20"></td> 
+    $Model.Header:{header | 
+      <td>
+      $if(header.CanSort)$
+        <a href="$BaseUrl$?Cmd=DataList&IdType=$Model.IdType$&SortBy=$header.Id$&SortType=$header.SortType$">$header.Name$</a>
+      $else$
+        <font>$header.Name$</font>
+      $endif$
+      </td>
+    }$ 
+    </tr>
+	
+	
+
+    $Model.Table:{table | 
+
+    $if(table.IsSelect)$
+      <tr class="TableData" bgcolor="#E3E3E3">
+    $else$
+      <tr class="TableData" bgcolor="#FFFFFF">
+    $endif$
+
+    <td>
+
+    <ul><li>
+
+    <img src="arrow.png" name="arrow_profile" alt="$DataListMenu$" title="$DataListMenu$" width="16" height="16" border="0" align="top" class="DataListMenuArrow" onClick="javascript:ShowMenu('idMenu_$table.Id$');">
+
+    <div class="DataListSubMenu" id="idMenu_$table.Id$">
+      <a href="javascript:window.open('$BaseUrl$?Cmd=DataUpdate&IdData=$table.Id$','','scrollbars,resizable,width=750,height=550');void(0);">
+      <img src="update.png" width="14" height="14" alt="$DataListUpdate$" title="$DataListUpdate$" border="0">&nbsp$DataListUpdate$</a>
+
+      <a href="javascript:window.open('$BaseUrl$?Cmd=DataDelete&IdData=$table.Id$','','scrollbars,resizable,width=400,height=220');void(0);">
+      <img src="delete.png" width="14" height="14" alt="$DataListDelete$" title="$DataListDelete$" border="0">&nbsp$DataListDelete$</a>
+
+      <hr>
+
+      <a href="javascript:window.open('$BaseUrl$?Cmd=DataAccess&IdData=$table.Id$','','scrollbars,resizable,width=600,height=650');void(0);">
+      <img src="access.png" width="14" height="14" alt="$DataListAccess$" title="$DataListAccess$" border="0">&nbsp$DataListAccess$</a>
+
+      <hr>
+
+      <a href="javascript:window.open('$BaseUrl$?Cmd=DataFileList&IdData=$table.Id$','','scrollbars,resizable,width=750,height=550');void(0);">
+      <img src="files.png" width="14" height="14" alt="$DataListFile$" title="$DataListFile$" border="0">
+      &nbsp$DataListFile$&nbsp($table.FileAmount$)</a>
+    </div>
+
+    </li></ul>
+
+    </td>
+	
+	
+
+    $table.Cols:{col | 
+      <td>
+      $col.Value$  
+      $if(col.HaveLink)$
+        <a href="#" onclick="ShowLink('idLink_$table.Id$_$col.IdCol$');">
+   	    <img src="linksmall.png" width="17" height="17" alt="$DataListLink$" title="$DataListLink$" border="0" valign="middle">
+	    </a>
+	
+	    <div id="idLink_$table.Id$_$col.IdCol$" style="display:none;">
+  	    $col.Links:{link | <a href="$BaseUrl$?Cmd=DataList&IdCol2=$link.IdCol2$&LinkData=$col.Value$" target="_blank">$link.Name$</a><br />}$
+	    </div>	
+      $endif$ 	  
+      </td>
+    }$
+
+
+  </tr>}$
+
+
+  </table>
+	
+
+</TD>
+	
+</TR>
+</TABLE>
