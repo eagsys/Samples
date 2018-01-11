@@ -1,0 +1,72 @@
+    //BEGIN SetAxisWeight
+    private void SetAxisWeight()
+    {
+      //BEGIN Cycle AxisAmount
+      for (int i = 0; i < AxisAmount; i++)
+      {
+        int axisNumber = i + 1;
+        double pMax = 0;
+        double pMin = 0;
+        int pAmount = 0;
+        bool canCycle = true;
+
+        List<PointData> PointListCurrent = new List<PointData>();
+        List<PointDataMm> pointListMm = new List<PointDataMm>();
+
+        var plc = (from pl in PointList where (pl.Axis == axisNumber) select pl);
+        foreach (var p in plc)
+        {
+          PointListCurrent.Add(new PointData { Cycle = p.Cycle, Axis = p.Axis, Time = p.Time,
+                                               Weight1 = p.Weight1, Weight2 = p.Weight2,
+                                               Weights = p.Weights });
+        }
+
+        pMax = ((from pl in PointListCurrent select pl.Weights).Max());
+
+        double pStep = Math.Round(pMax * (StepPercent / 100), 2); 
+
+        if (StepType == "1") pMin = Math.Round(pMax - (pMax * (StepPercent / 100)), 2);
+        else if (StepType == "2") pMin = Math.Round(pMax - pStep, 2);
+
+        //BEGIN while
+        while(canCycle)
+        {
+          pAmount = ((from pl in PointListCurrent
+                      where ((pl.Weights <= pMax) && (pl.Weights >= pMin)) select pl).Count());
+
+          pointListMm.Add(new PointDataMm { Maximum=pMax, Minimum = pMin, Amount = pAmount });
+
+          pMax = pMin;
+
+          if (StepType == "1")
+          {
+            pMin = Math.Round(pMax - (pMax * (StepPercent / 100)), 2);
+            if (pMax < MinWeightAxis) canCycle = false;
+          }
+          else if (StepType == "2")
+          {
+            pMin = Math.Round(pMax - pStep, 2);
+            if ((pMax < MinWeightAxis) || (pMin < MinWeightAxis)) canCycle = false;
+          }
+        }
+        //END while
+
+        int maxAmountPoint = ((from plm in pointListMm select plm.Amount).Max());
+        double maxPoint = ((from plm in pointListMm where (plm.Amount == maxAmountPoint) select plm.Maximum).First());
+        double minPoint = ((from plm in pointListMm where (plm.Amount == maxAmountPoint) select plm.Minimum).First());
+
+        double midValue1 = (Math.Round((from pl in PointListCurrent where ((pl.Weights <= maxPoint) && (pl.Weights >= minPoint))
+                                        select pl.Weight1).Average(), 2));
+        midValue1 = (midValue1 * Coefficient);
+
+        double midValue2 = (Math.Round((from pl in PointListCurrent where ((pl.Weights <= maxPoint) && (pl.Weights >= minPoint))
+                                        select pl.Weight2).Average(), 2));
+        midValue2 = (midValue2 * Coefficient);
+
+        double midValues = (Math.Round((midValue1 + midValue2), 2));
+
+        AxisWeightList.Add(new AxisWeight { Weight1 = midValue1, Weight2 = midValue2, Weights = midValues });
+      }
+      //END Cycle AxisAmount
+    } 
+    //END SetAxisWeight

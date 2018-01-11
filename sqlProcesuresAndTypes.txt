@@ -1,0 +1,76 @@
+CREATE TYPE [dbo].[ut_data_access_process] AS TABLE(
+	[f_iduser] [int] NOT NULL DEFAULT ((0)),
+	[f_owner] [char](1) NOT NULL DEFAULT ('n'),
+	[f_read] [char](1) NOT NULL DEFAULT ('y'),
+	[f_update] [char](1) NOT NULL DEFAULT ('n'),
+	[f_delete] [char](1) NOT NULL DEFAULT ('n')
+)
+GO
+
+
+CREATE PROCEDURE [dbo].[pr_data_access_list](@p_iddata INT, @p_iduser INT, @p_idgroup INT)
+AS
+BEGIN
+  DECLARE @isAccess INT = 0; 
+  EXEC @isAccess = pr_data_access_check @p_iddata, @p_iduser;
+
+  IF (@isAccess = 1) BEGIN
+    DECLARE @Users TABLE(f_id INT, f_name NVARCHAR(50));
+
+    INSERT INTO @Users(f_id, f_name) VALUES(0, '*');
+
+	INSERT INTO @Users(f_id, f_name) 
+      SELECT user_list.f_id, user_list.f_name FROM dbo.group_user 
+      INNER JOIN dbo.user_list ON group_user.f_iduser = user_list.f_id 
+      WHERE ((group_user.f_idgroup = @p_idgroup) AND 
+            ((user_list.f_id <> @p_iduser) AND (user_list.f_act = 'y') AND 
+             (user_list.f_dtdel IS NULL))) ORDER BY f_name ASC;
+
+	INSERT INTO dbo.data_access(f_iddata, f_iduser) 
+	    SELECT @p_iddata, f_id FROM @Users WHERE f_id NOT IN 
+	      (SELECT f_iduser FROM dbo.data_access WHERE f_iddata = @p_iddata);
+
+	SELECT Users.f_id, Users.f_name, data_access.f_read, data_access.f_update, data_access.f_delete 
+	  FROM dbo.data_access INNER JOIN @Users AS Users ON data_access.f_iduser = Users.f_id 
+        WHERE data_access.f_iddata = @p_iddata;
+  END;
+  ELSE THROW 50000, N'Ошибка проверки данных', 1;
+END
+
+
+
+CREATE PROCEDURE [dbo].[pr_step_add] 
+(
+  @p_idtype INT, @p_idgroup INT, 
+  @p_name NVARCHAR(50), @p_info NVARCHAR(MAX), @p_check NVARCHAR(MAX)
+) 
+AS
+BEGIN
+  DECLARE @isError CHAR = 'y';
+  DECLARE @f_id INT = 0;
+
+  --BEGIN Type Check
+  DECLARE @isAccess INT = 0; EXEC @isAccess = pr_type_check @p_idtype, @p_idgroup;
+  IF (@isAccess = 1) BEGIN
+	BEGIN TRANSACTION;
+
+	BEGIN TRY
+	  INSERT INTO dbo.step_list(f_idtype, f_name, f_info, f_check) 
+	  VALUES(@p_idtype, @p_name, @p_info, @p_check);
+
+	  SELECT @f_id = SCOPE_IDENTITY();
+
+	  SET @isError = 'n';
+	END TRY
+    BEGIN CATCH
+      SET @isError = 'y';
+    END CATCH;
+
+	IF (@isError = 'n') COMMIT;
+    ELSE ROLLBACK;
+  END;
+  ELSE THROW 50000, N'Ошибка проверки типа', 1; 
+  --END Type Check
+
+  SELECT @isError AS f_iserror, @f_id AS f_id;
+END
